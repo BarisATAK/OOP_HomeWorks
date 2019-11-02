@@ -1,0 +1,177 @@
+/*------------------------------------
+  PURPOSE: Receive a document from the queue of printer and print it
+  NAME / LASTNAME:	Barýþ ATAK
+  LATEST UPDATE: 01.11.2018
+------------------------------------*/
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#define QUEUE 20
+#define N 20
+
+using namespace std;
+//Struct Declarations
+
+struct Person {
+	string name;
+	string l_name;
+	string u_name;
+	string e_mail;
+};
+
+struct CreationDate {
+	int year;
+	int day;
+	int mounth;
+	int hour;
+	int minute;
+	int second;
+};
+
+struct Size {
+	int size;
+};
+
+struct CountOfPage {
+	int c_page;
+};
+
+struct DocPath {
+	string doc_path;
+	Person person;
+	CreationDate cre_date;
+	Size siz;
+	CountOfPage c_o_page;
+};
+
+struct Queue {
+	DocPath d;
+};
+
+int WriteTime(int c_page, int write_speed) {
+	return c_page * write_speed;
+}
+int main() {
+
+	unsigned int send_sec;
+	unsigned int write_speed;
+	DocPath read[N]; 
+	int counter = 0;
+
+	cout << "PC kac saniyede kuyruga belge gonderir(sn) :";
+	cin >> send_sec;
+	cout << "Yazicinin bir sayfayi yazma hizi nedir?(sn) :";
+	cin >> write_speed;
+
+	ifstream doc;
+	doc.open("Belgeler1.txt");
+
+	while (!doc.eof()) {
+		doc >> read[counter].doc_path;
+		doc >> read[counter].siz.size;
+		doc >> read[counter].c_o_page.c_page;
+		doc >> read[counter].person.name;
+		doc >> read[counter].person.l_name;
+		doc >> read[counter].person.u_name;
+		doc >> read[counter].person.e_mail;
+		doc >> read[counter].cre_date.year;
+		doc >> read[counter].cre_date.day;
+		doc >> read[counter].cre_date.mounth;
+		doc >> read[counter].cre_date.hour;
+		doc >> read[counter].cre_date.minute;
+		doc >> read[counter].cre_date.second;
+
+		counter++;
+	}
+
+	doc.close();
+	//Finished reading to file.
+	Queue write[N]; 
+
+	for (int i = 0; i < counter; i++) {
+		//Sync writing to read
+		write[i].d.doc_path = read[i].doc_path;
+		write[i].d.siz.size = read[i].siz.size;
+		write[i].d.c_o_page.c_page = read[i].c_o_page.c_page;
+		write[i].d.person.name = read[i].person.name;
+		write[i].d.person.l_name = read[i].person.l_name;
+		write[i].d.person.u_name = read[i].person.u_name;
+		write[i].d.person.e_mail = read[i].person.e_mail;
+		write[i].d.cre_date.year = read[i].cre_date.year;
+		write[i].d.cre_date.day = read[i].cre_date.day;
+		write[i].d.cre_date.mounth = read[i].cre_date.mounth;
+		write[i].d.cre_date.hour = read[i].cre_date.hour;
+		write[i].d.cre_date.minute = read[i].cre_date.minute;
+		write[i].d.cre_date.second = read[i].cre_date.second;
+	}
+	
+	//Read to page count
+	int w_index = 0;
+	int write_time[N] = { 0 }; 
+
+	for (w_index; w_index < counter; w_index++) {
+		write_time[w_index] = WriteTime(read[w_index].c_o_page.c_page, write_speed);
+	}
+
+	ofstream queue;
+	queue.open("Kuyruk.txt");
+
+	int qEnd = -1;
+	int qHead = 0;
+	int clock = 0;
+	int tempClock = 0;
+	int wScreen = 0;
+
+	for (int w = 0; w < 150; w++) { 
+		if (clock % send_sec == 0 && qHead < counter) {
+			if (qEnd < QUEUE - 1) {
+				queue << write[qHead].d.doc_path << " ";
+				queue << write[qHead].d.siz.size << " ";
+				queue << write[qHead].d.c_o_page.c_page << " ";
+				queue << write[qHead].d.person.name << " ";
+				queue << write[qHead].d.person.l_name << " ";
+				queue << write[qHead].d.person.u_name << " ";
+				queue << write[qHead].d.person.e_mail << " ";
+				queue << write[qHead].d.cre_date.year << " ";
+				queue << write[qHead].d.cre_date.day << " ";
+				queue << write[qHead].d.cre_date.mounth << " ";
+				queue << write[qHead].d.cre_date.hour << " ";
+				queue << write[qHead].d.cre_date.minute << " ";
+				queue << write[qHead].d.cre_date.second << endl;
+
+				cout << clock << "sn " << " - PC kuyruga yazdi -	" << write[qHead].d.doc_path << endl;
+				qEnd++;
+				qHead++;
+			}
+			else {
+				cout << clock << "sn - de kuyruga yazamadi." << endl;
+			}
+			if (clock == 0) {
+				cout << clock << "sn " << " - Yazici kuyruktan okudu -	" << write[qHead - 1].d.doc_path << endl;
+				qEnd--;
+			}
+		}
+		if (write_time[wScreen] == tempClock) {
+			cout << clock << "sn - Yazici Belgeyi yazdi.	" << write[wScreen].d.doc_path << endl;
+			if (wScreen + 1 == counter) {
+				cout << "Tum belgeler yazildi" << endl;
+				break;
+			}
+			else {
+				cout << clock << "sn " << " - Yazici kuyruktan okudu -	" << write[wScreen + 1].d.doc_path << endl;
+				qEnd--;
+				if (qEnd < -1) {
+					qEnd = -1;
+				}
+			}
+			tempClock = 0;
+			wScreen++;
+		}
+		tempClock++;
+		clock++;
+	}
+	queue.close();
+	system("pause");
+	return 0;
+}

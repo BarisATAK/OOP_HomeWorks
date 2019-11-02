@@ -1,0 +1,822 @@
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <stdlib.h>
+using namespace std;
+
+static int stu_counter = 0;
+static int aca_counter = 0;
+static int app_counter = 0;
+static int old_record  = 0;
+
+class Person {
+protected:
+	string name;
+	string l_name;
+	string mail;
+	string phone_num;
+public:
+	void setName(string n) { name = n; }
+	void setL_name(string l_n) { l_name = l_n; }
+	void setMail(string m) { mail = m; }
+	void setPhone_num(string p_n) { phone_num = p_n; }
+	string getName() {return name;}
+	string getL_name() { return l_name; }
+	string getMail() { return mail; }
+	string getPhone_num() { return phone_num; }
+};
+
+class Academician :public Person {
+private:
+	unsigned int academician_num;
+	string major; //Ana bilim dalý.
+	string degree; //Ünvan.
+public:
+	void setAcademician_num(unsigned int a_n) { academician_num = a_n; }
+	void setMajor(string m) { major = m; }
+	void setDegree(string d) { degree = d; }
+	unsigned int getAcademician_num() { return academician_num; }
+	string getMajor() { return major; }
+	string getDegree() { return degree; }
+};
+
+class Student :public Person {
+private:
+	unsigned int student_num;
+	string departure; //Bölüm.
+	unsigned int registration_date;
+public:
+	void setStudent_num(unsigned int s_n) { student_num = s_n; }
+	void setDeparture(string d) { departure = d; }
+	void setRegistration_date(unsigned int r_d) { registration_date = r_d; }
+	unsigned int getStudent_num() { return student_num; }
+	string getDeparture() { return departure; }
+	unsigned int getRegistration_date() { return registration_date; }
+};
+
+class Appointment { //Randevu.
+private:
+	Academician a;
+	Student		s;
+	string	date;
+	string	start_time;
+	string	finish_time;
+public:
+	void setAcaNumInApp(unsigned int a_n) { a.setAcademician_num(a_n); }
+	void setStuNumInApp(unsigned int s_n) { s.setStudent_num(s_n); }
+	void setDate(string d) { date = d; }
+	void setStart_time(string s_t) { start_time = s_t; }
+	void setFinish_time(string f_t) { finish_time = f_t; }
+	unsigned int getAcaNumInApp() { return a.getAcademician_num(); }
+	unsigned int getStuNumInApp() { return s.getStudent_num(); }
+	string getDate() { return date; }
+	string getStart_time() { return start_time; }
+	string getFinish_time() { return finish_time; }
+};
+
+class System {
+private:
+	int selection1;
+	int selection2;
+	Student stu[10];
+	Academician aca[10];
+	Appointment app[10];
+public:
+	void menu_1();
+	void menu_2();
+	void select();
+	void recordAdd();
+	void recordDelete();
+	void recordUpdate();
+	void recordList();
+	void oldRecords();
+	char otherProcess();
+};
+
+///////////////////****TEMPLATE VARIABLES****/////////////////////////
+struct TempStu {
+	unsigned int ogr_n;
+	string name;
+	string l_name;
+	string departure;
+	unsigned int regis_date;
+	string mail;
+	string phone_num;
+};
+struct TempAca {
+	unsigned int academician_num;
+	string name;
+	string l_name;
+	string major;
+	string mail;
+	string phone_num;
+	string degree;
+};
+struct TempApp {
+	unsigned int ogr_n;
+	unsigned int academician_num;
+	string app_date;
+	string app_st_time;
+	string app_fin_time;
+};
+///////////////////////////////////////////////////////////////////////
+
+///////////////////************MAIN***********/////////////////////////
+
+int main(void) {
+	System sys;
+
+	sys.oldRecords(); //Ýlk basta eski kayýtlarý setler.
+
+	sys.menu_1();	  //Menu açýlýr ve iþlemler gerçekleþtirilir.
+
+	//system("pause");
+	return 0;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+void System::menu_1() {
+	cout << "1.)Ogrenci" << endl;
+	cout << "2.)Akademisyen" << endl;
+	cout << "3.)Randevu" << endl;
+	cout << "Yukaridakilerden birini seciniz:";
+	cin >> selection1;
+	if (selection1 > 0 && selection1 <= 3) {
+		menu_2();
+	}
+	else {
+		cout << "Hatali giris! Tekrar deneyiniz..." << endl;
+		menu_1();
+	}
+}
+void System::menu_2() {
+	cout << "1.)Kayit Ekle" << endl;
+	cout << "2.)Kayit sil" << endl;
+	cout << "3.)Kayit Guncelle" << endl;
+	cout << "4.)Kayit Listele" << endl;
+	cout << "Yapmak istediginiz islemi seciniz:";
+	cin >> selection2;
+	if (selection2 > 0 && selection2 <= 4) {
+		select();
+	}
+	else {
+		cout << "Hatali giris! Tekrar deneyiniz..." << endl;
+		menu_2();
+	}
+}
+void System::select() { //Menu2 de yapýlan secimle hangi fonksiyona gidecegine karar verir.
+	switch (selection2) {
+	case 1:
+		recordAdd();
+		break;
+	case 2:
+		recordDelete();////////////////////////
+		break;
+	case 3:
+		recordUpdate();
+		break;
+	case 4:
+		recordList();
+		break;
+	}
+}
+void System::oldRecords() { //Eski kayýtlarý setler.
+
+	TempStu ts[20];
+	ifstream studoc;
+	studoc.open("ogrenci.txt");
+	while (!studoc.eof()) {
+		studoc >> ts[old_record].ogr_n;
+		studoc >> ts[old_record].name;
+		studoc >> ts[old_record].l_name;
+		studoc >> ts[old_record].departure;
+		studoc >> ts[old_record].regis_date;
+		studoc >> ts[old_record].mail;
+		studoc >> ts[old_record].phone_num;
+
+		stu[stu_counter].setStudent_num(ts[old_record].ogr_n);
+		stu[stu_counter].setName(ts[old_record].name);
+		stu[stu_counter].setL_name(ts[old_record].l_name);
+		stu[stu_counter].setDeparture(ts[old_record].departure);
+		stu[stu_counter].setRegistration_date(ts[old_record].regis_date);
+		stu[stu_counter].setMail(ts[old_record].mail);
+		stu[stu_counter].setPhone_num(ts[old_record].phone_num);
+
+		old_record++;
+		stu_counter++;
+	}
+	studoc.close();
+
+	old_record = 0;
+
+	TempAca ta[20];
+	ifstream acadoc;
+	acadoc.open("akademisyen.txt");
+	while (!acadoc.eof()) {
+		acadoc >> ta[old_record].academician_num;
+		acadoc >> ta[old_record].name;
+		acadoc >> ta[old_record].l_name;
+		acadoc >> ta[old_record].major;
+		acadoc >> ta[old_record].mail;
+		acadoc >> ta[old_record].phone_num;
+		acadoc >> ta[old_record].degree;
+
+		aca[aca_counter].setAcademician_num(ta[old_record].academician_num);
+		aca[aca_counter].setName(ta[old_record].name);
+		aca[aca_counter].setL_name(ta[old_record].l_name);
+		aca[aca_counter].setMajor(ta[old_record].major);
+		aca[aca_counter].setMail(ta[old_record].mail);
+		aca[aca_counter].setPhone_num(ta[old_record].phone_num);
+		aca[aca_counter].setDegree(ta[old_record].degree);
+
+		old_record++;
+		aca_counter++;
+	}
+	studoc.close();
+
+	old_record = 0;
+
+	TempApp tapp[20];
+	ifstream appdoc;
+	appdoc.open("randevu.txt");
+	while (!appdoc.eof()) {
+		appdoc >> tapp[old_record].ogr_n;
+		appdoc >> tapp[old_record].academician_num;
+		appdoc >> tapp[old_record].app_date;
+		appdoc >> tapp[old_record].app_st_time;
+		appdoc >> tapp[old_record].app_fin_time;
+
+		app[app_counter].setStuNumInApp(tapp[old_record].ogr_n);
+		app[app_counter].setAcaNumInApp(tapp[old_record].academician_num);
+		app[app_counter].setDate(tapp[old_record].app_date);
+		app[app_counter].setStart_time(tapp[old_record].app_st_time);
+		app[app_counter].setFinish_time(tapp[old_record].app_fin_time);
+
+		old_record++;
+		app_counter++;
+	}
+	studoc.close();
+
+}
+void System::recordList() { //Kayýtlarý listeler
+	string okunan;
+	switch (selection1) {
+		case 1:
+		{
+			ifstream stuDoc;
+			stuDoc.open("ogrenci.txt");
+			while (!stuDoc.eof()) {
+				getline(stuDoc, okunan);
+				cout << okunan << endl;
+			}
+			stuDoc.close();
+			break;
+		}
+		case 2:
+		{
+			ifstream acaDoc;
+			acaDoc.open("akademisyen.txt");
+			while (!acaDoc.eof()) {
+				getline(acaDoc, okunan);
+				cout << okunan << endl;
+			}
+			acaDoc.close();
+			break;
+		}
+		case 3:
+		{
+			ifstream appDoc;
+			appDoc.open("randevu.txt");
+			while (!appDoc.eof()) {
+				getline(appDoc, okunan);
+				cout << okunan << endl;
+			}
+			appDoc.close();
+			break;
+		}
+	}
+	otherProcess();
+}
+char System::otherProcess() {//Baþka iþlem yapýlýcakmý kontrol eder.
+	char process;
+	cout << "Baska bir islem yapmak icin (e) cikmak icin (h)'ye basiniz:";
+	cin  >> process;
+	if (process == 'e')
+		menu_1();
+	else if (process == 'h') {
+		return 0;
+	}
+	else {
+		cout << "Yanlis giris yaptiniz!" << endl;
+		otherProcess();
+	}
+}
+
+void System::recordAdd() {//Kayýtlarý ekler
+	TempStu ts;
+	if (selection1 == 1) {
+
+		cout << "Ogrencinin Numarasi			:";
+		cin >> ts.ogr_n;
+
+		while (ts.ogr_n <= 0) {
+			cout << "Hatali ekleme yaptiniz! Tekrar deneyiniz..." << endl;
+			cout << "Ogrencinin Numarasi			:";
+			cin >> ts.ogr_n;
+		}
+
+		cout << "Ogrencinin Adi					:";
+		cin >> ts.name;
+		cout << "Ogrencinin Soyadi				:";
+		cin >> ts.l_name;
+		cout << "Ogrencinin Bolumu				:";
+		cin >> ts.departure;
+		cout << "Ogrencinin Kayit Yili			:";
+		cin >> ts.regis_date;
+
+		while (ts.regis_date <= 0) {
+			cout << "Hatali ekleme yaptiniz! Tekrar deneyiniz..." << endl;
+			cout << "Ogrencinin Kayit Yili			:";
+			cin >> ts.regis_date;
+		}
+
+		cout << "Ogrencinin Maili				:";
+		cin >> ts.mail;
+		cout << "Ogrencinin Telefon Numarasi	:";
+		cin >> ts.phone_num;
+
+		stu[stu_counter].setStudent_num(ts.ogr_n);
+		stu[stu_counter].setName(ts.name);
+		stu[stu_counter].setL_name(ts.l_name);
+		stu[stu_counter].setDeparture(ts.departure);
+		stu[stu_counter].setRegistration_date(ts.regis_date);
+		stu[stu_counter].setMail(ts.mail);
+		stu[stu_counter].setPhone_num(ts.phone_num);
+
+		stu_counter++;
+
+		ofstream studentDoc;
+		studentDoc.open("ogrenci.txt", ios::app);
+
+		stu_counter--;
+
+		studentDoc << endl;
+		studentDoc << stu[stu_counter].getStudent_num() << "\t";
+		studentDoc << stu[stu_counter].getName() << "\t";
+		studentDoc << stu[stu_counter].getL_name() << "\t\t";
+		studentDoc << stu[stu_counter].getDeparture() << "\t\t";
+		studentDoc << stu[stu_counter].getRegistration_date() << "\t";
+		studentDoc << stu[stu_counter].getMail() << "\t";
+		studentDoc << stu[stu_counter].getPhone_num() << "\n";
+		stu_counter--;
+
+		studentDoc.close();
+		otherProcess();
+	}
+	else if (selection1 == 2) {
+		TempAca ta;
+
+		cout << "Akademisyen Sicil Numarasi			:";
+		cin >> ta.academician_num;
+		while (ta.academician_num <= 0) {
+			cout << "Hatali ekleme yaptiniz! Tekrar deneyiniz..." << endl;
+			cout << "Akademisyen Sicil Numarasi				:";
+			cin >> ta.academician_num;
+		}
+		cout << "Akademisyenin Adi					:";
+		cin >> ta.name;
+		cout << "Akademisyenin Soyadi				:";
+		cin >> ta.l_name;
+		cout << "Akademisyenin Ana Bilim Dali		:";
+		cin >> ta.major;
+		cout << "Akademisyenin Maili				:";
+		cin >> ta.mail;
+		cout << "Akademisyenin Telefon Numarasi		:";
+		cin >> ta.phone_num;
+		cout << "Akademisyenin Unvani				:";
+		cin >> ta.degree;
+
+		aca[aca_counter].setAcademician_num(ta.academician_num);
+		aca[aca_counter].setName(ta.name);
+		aca[aca_counter].setL_name(ta.l_name);
+		aca[aca_counter].setMajor(ta.major);
+		aca[aca_counter].setMail(ta.mail);
+		aca[aca_counter].setPhone_num(ta.phone_num);
+		aca[aca_counter].setDegree(ta.degree);
+
+		aca_counter++;
+
+		ofstream academicianDoc;
+		academicianDoc.open("akademisyen.txt", ios::app);
+
+		aca_counter--;
+
+		academicianDoc << endl;
+		academicianDoc << aca[aca_counter].getAcademician_num() << "\t";
+		academicianDoc << aca[aca_counter].getName() << "\t";
+		academicianDoc << aca[aca_counter].getL_name() << "\t";
+		academicianDoc << aca[aca_counter].getMajor() << "\t\t";
+		academicianDoc << aca[aca_counter].getMail() << "\t\t";
+		academicianDoc << aca[aca_counter].getPhone_num() << "\t";
+		academicianDoc << aca[aca_counter].getDegree() << "\n";
+		aca_counter--;
+
+		academicianDoc.close();
+
+		otherProcess();
+	}
+	else if (selection1 == 3) {
+		TempApp tApp;
+		TempApp tApp_clock[20];
+
+		cout << "1 saatlik randevu alinabilir." << endl;
+		cout << "Ogrenci Numarasi			:";
+		cin >> tApp.ogr_n;
+		while (tApp.ogr_n <= 0) {///////////karakter girince hata veritor
+			cout << "Hatali ekleme yaptiniz! Tekrar deneyiniz..." << endl;
+			cout << "Ogrenci Numarasi				:";
+			cin >> tApp.ogr_n;
+		}
+		cout << "Akademisyen Sicil Numarasi			:";
+		cin >> tApp.academician_num;
+		while (tApp.academician_num <= 0) {
+			cout << "Hatali ekleme yaptiniz! Tekrar deneyiniz..." << endl;
+			cout << "Akademisyen Sicil Numarasi				:";
+			cin >> tApp.academician_num;
+		}
+		cout << "Randevu Tarihi						:";
+		cin >> tApp.app_date;
+
+		cout << "Randevu Baslangic Saati			:";
+		cin >> tApp.app_st_time;
+
+		cout << "Randevu Bitis Saati				:";
+		cin >> tApp.app_fin_time;
+
+		int startHours[20];
+		int finishHours[20];
+		int startMinute;
+		int finishMinute;
+		string getClocks[20];
+		int controlClock = 1;	//Tarih ve saat dolu deðilse
+		int controlPer = 0;		//Akademiyen sistemde yoksa
+		int controlStu = 0;		//Ogrenci sistemde yoksa
+
+		startHours[app_counter-1]    = atoi(tApp.app_st_time.substr(0, 2).c_str()); //Son girilen saati Integer'a donusturme
+		finishHours[app_counter-1]   = atoi(tApp.app_fin_time.substr(0, 2).c_str()); //Son girilen saati Integer'a donusturme
+
+		startMinute  = atoi(tApp.app_st_time.substr(3, 2).c_str());
+		finishMinute = atoi(tApp.app_fin_time.substr(3, 2).c_str());
+
+		while (finishHours[app_counter - 1] - startHours[app_counter - 1] != 1 || finishMinute - startMinute != 0)
+		{
+			cout << finishHours[app_counter - 1] << endl;
+			cout << startHours[app_counter - 1]  << endl;
+			cout << finishHours[app_counter - 1] - startHours[app_counter - 1] << endl << endl;
+			cout << "Randevu'ler 1 saatlik tekrar deneyiniz..."<<endl;
+
+			cout << "Randevu Baslangic Saati			:";
+			cin  >> tApp.app_st_time;
+
+			cout << "Randevu Bitis Saati				:";
+			cin  >> tApp.app_fin_time;
+
+			startHours[app_counter - 1]  = atoi(tApp.app_st_time.substr(0, 2).c_str()); //Son girilen saati Integer'a donusturme
+			finishHours[app_counter - 1] = atoi(tApp.app_fin_time.substr(0, 2).c_str()); //Son girilen saati Integer'a donusturme
+
+			startMinute  = atoi(tApp.app_st_time.substr(3, 2).c_str());
+			finishMinute = atoi(tApp.app_fin_time.substr(3, 2).c_str());
+		}
+
+		app_counter--;
+
+		for (int i = 0; i < app_counter; i++) {// Saat'i Integer'a donusturme
+			getClocks[i]  = app[i].getStart_time();
+			startHours[i] = atoi(getClocks[i].substr(0, 2).c_str());
+		}
+		for (int k = 0; k < 20; k++) {// Akademisyen sistem kontrol
+			if (tApp.academician_num == aca[k].getAcademician_num()) {
+				controlPer = 1;
+			}
+		}
+		for (int k = 0; k < 20; k++) {// Ogrenci sistem kontrol
+			if (tApp.ogr_n == stu[k].getStudent_num()) {
+				controlStu = 1;
+			}
+		}
+
+		if (controlPer == 1 && controlStu == 1) {
+			for (int j = 0; j < app_counter; j++) {
+				if (tApp.academician_num == app[j].getAcaNumInApp()
+					&& tApp.app_date == app[j].getDate()
+					 && startHours[app_counter] == startHours[j]) {
+
+						controlClock = 0;
+						cout << "Girdiginiz tarihte akademisyenin o saati dolu! Tekrar deneyiniz..." << endl;
+						menu_1();
+						break;
+				}
+			}
+		}
+		else {
+			cout << "Girilen akademisyen veya ogrenci sistemde kayitli degil!"<<endl;
+			menu_1();
+		}
+
+		if (controlClock == 1 && controlPer == 1 && controlStu == 1) {
+
+			app[app_counter].setStuNumInApp(tApp.ogr_n);
+			app[app_counter].setAcaNumInApp(tApp.academician_num);
+			app[app_counter].setDate(tApp.app_date);
+			app[app_counter].setStart_time(tApp.app_st_time);
+			app[app_counter].setFinish_time(tApp.app_fin_time);
+
+			app_counter++;
+
+			ofstream appointmentDoc;
+			appointmentDoc.open("randevu.txt", ios::app);
+
+			app_counter--;
+
+			appointmentDoc << app[app_counter].getStuNumInApp() << "\t\t";
+			appointmentDoc << app[app_counter].getAcaNumInApp() << "\t\t";
+			appointmentDoc << app[app_counter].getDate() << "\t\t";
+			appointmentDoc << app[app_counter].getStart_time() << "\t\t";
+			appointmentDoc << app[app_counter].getFinish_time() << "\n";
+			app_counter--;
+
+			appointmentDoc.close();
+			otherProcess();
+
+		}
+	}
+}
+void System::recordUpdate() { //Kayýtlarý günceller.
+	int i,k, control = 0;
+	if (selection1 == 1) {
+		TempStu update_ts;
+		cout << "Guncellemek istediginiz ogrenci numarasini giriniz:";
+		cin >> update_ts.ogr_n;
+
+		for (k = 0; k < stu_counter; k++) {
+			if (stu[k].getStudent_num() == update_ts.ogr_n) {
+				control = 1;
+				break;
+			}
+
+		}
+		if (control == 0) {
+			cout << "Sistem de " << update_ts.ogr_n << " numarasi bulunamadi! Tekrar deneyiz." << endl;
+			menu_1();
+		}
+		else {
+			cout << "Ogrencinin adini giriniz:";
+			cin >> update_ts.name;
+			cout << "Ogrencinin soyadini giriniz:";
+			cin >> update_ts.l_name;
+			cout << "Ogrencinin bolumunu giriniz:";
+			cin >> update_ts.departure;
+			cout << "Ogrencinin kayit yilini giriniz:";
+			cin >> update_ts.regis_date;
+			cout << "Ogrencinin mailini giriniz:";
+			cin >> update_ts.mail;
+			cout << "Ogrencinin telefon numarasini giriniz:";
+			cin >> update_ts.phone_num;
+
+			stu[k].setStudent_num(update_ts.ogr_n);
+			stu[k].setName(update_ts.name);
+			stu[k].setL_name(update_ts.l_name);
+			stu[k].setDeparture(update_ts.departure);
+			stu[k].setRegistration_date(update_ts.regis_date);
+			stu[k].setMail(update_ts.mail);
+			stu[k].setPhone_num(update_ts.phone_num);
+
+			ifstream stuFile;
+			stuFile.open("ogrenci.txt");
+			ofstream updateStu;
+			updateStu.open("tempUpdate.txt", ios::app);
+			for (i = 0; i < stu_counter; i++) {
+				if (update_ts.ogr_n != stu[i].getStudent_num()) {
+
+					updateStu << stu[i].getStudent_num() << "\t";
+					updateStu << stu[i].getName() << "\t";
+					updateStu << stu[i].getL_name() << "\t\t";
+					updateStu << stu[i].getDeparture() << "\t\t";
+					updateStu << stu[i].getRegistration_date() << "\t";
+					updateStu << stu[i].getMail() << "\t";
+					updateStu << stu[i].getPhone_num() << "\n";
+				}
+			}
+			updateStu << stu[k].getStudent_num()<< "\t";
+			updateStu << stu[k].getName()<< "\t";
+			updateStu << stu[k].getL_name()<< "\t\t";
+			updateStu << stu[k].getDeparture()<< "\t\t";
+			updateStu << stu[k].getRegistration_date()<< "\t";
+			updateStu << stu[k].getMail()<< "\t";
+			updateStu << stu[k].getPhone_num();
+			updateStu.close();
+			stuFile.close();
+			remove("ogrenci.txt");
+			rename("tempUpdate.txt", "ogrenci.txt");
+		}
+		otherProcess();
+	}
+	if (selection1 == 2) {
+		TempAca update_aca;
+		cout << "Guncellemek istediginiz Akademisyen numarasini giriniz:";
+		cin >> update_aca.academician_num;
+
+		for (k = 0; k < aca_counter; k++) {
+			if (aca[k].getAcademician_num() == update_aca.academician_num) {
+				control = 1;
+				break;
+			}
+
+		}
+		if (control == 0) {
+			cout << "Sistem de " << update_aca.academician_num << " numarasi bulunamadi! Tekrar deneyiz." << endl;
+			menu_1();
+		}
+		else {
+			cout << "Akademisyen adini giriniz:";
+			cin >> update_aca.name;
+			cout << "Akademisyen soyadini giriniz:";
+			cin >> update_aca.l_name;
+			cout << "Akademisyen alanini giriniz:";
+			cin >> update_aca.major;
+			cout << "Akademisyen mailini giriniz:";
+			cin >> update_aca.mail;
+			cout << "Akademisyen telefon numarasýný giriniz:";
+			cin >> update_aca.phone_num;
+			cout << "Akademisyen unvanini giriniz:";
+			cin >> update_aca.degree;
+
+			aca[k].setAcademician_num(update_aca.academician_num);
+			aca[k].setName(update_aca.name);
+			aca[k].setL_name(update_aca.l_name);
+			aca[k].setMajor(update_aca.major);
+			aca[k].setMail(update_aca.mail);
+			aca[k].setPhone_num(update_aca.phone_num);
+			aca[k].setDegree(update_aca.degree);
+
+			ifstream acaFile;
+			acaFile.open("akademisyen.txt");
+			ofstream updateAca;
+			updateAca.open("tempUpdateAca.txt", ios::app);
+			for (i = 0; i < stu_counter; i++) {
+				if (update_aca.academician_num != aca[i].getAcademician_num()) {
+
+					updateAca << aca[i].getAcademician_num() << "\t";
+					updateAca << aca[i].getName() << "\t";
+					updateAca << aca[i].getL_name() << "\t\t";
+					updateAca << aca[i].getMajor() << "\t\t";
+					updateAca << aca[i].getMail() << "\t";
+					updateAca << aca[i].getPhone_num() << "\t";
+					updateAca << aca[i].getDegree() << "\n";
+				}
+			}
+			updateAca << aca[k].getAcademician_num() << "\t";
+			updateAca << aca[k].getName() << "\t";
+			updateAca << aca[k].getL_name() << "\t\t";
+			updateAca << aca[k].getMajor() << "\t\t";
+			updateAca << aca[k].getMail() << "\t";
+			updateAca << aca[k].getPhone_num() << "\t";
+			updateAca << aca[k].getDegree();
+			updateAca.close();
+			acaFile.close();
+			remove("akademisyen.txt");
+			rename("tempUpdateAca.txt", "akademisyen.txt");
+		}
+		otherProcess();
+	}
+}
+void System::recordDelete() {//Kayýtlarý siler.
+
+	int i, j, k, control = 0;
+
+	if (selection1 == 1) { //Ogrenci sil
+		TempStu ts;
+
+		cout << "Silmek istediginiz ogrenci no gir:";
+		cin >> ts.ogr_n;
+
+			for (k = 0; k < stu_counter; k++) {
+				if (stu[k].getStudent_num() == ts.ogr_n)
+					control = 1;
+			}
+
+			if (control == 0) {
+				cout << "Sistem de " << ts.ogr_n << " numarasi bulunamadi! Tekrar deneyiz." << endl;
+				menu_1();
+			}
+			else {
+				ifstream stuFile;
+				stuFile.open("ogrenci.txt");
+
+				ofstream tempStu;
+				tempStu.open("tempStu.txt", ios::app);
+				for (i = 0; i < stu_counter; i++) {
+					if (ts.ogr_n != stu[i].getStudent_num()) {
+
+						tempStu << stu[i].getStudent_num() << "\t";
+						tempStu << stu[i].getName() << "\t";
+						tempStu << stu[i].getL_name() << "\t\t";
+						tempStu << stu[i].getDeparture() << "\t\t";
+						tempStu << stu[i].getRegistration_date() << "\t";
+						tempStu << stu[i].getMail() << "\t";
+						tempStu << stu[i].getPhone_num() << "\n";
+					}
+				}
+				tempStu.close();
+
+				stuFile.close();
+				remove("ogrenci.txt");
+				rename("tempStu.txt", "ogrenci.txt");
+
+				otherProcess();
+			}
+	}
+	if (selection1 == 2) { //Akademisyen sil
+		TempAca t_aca;
+
+		cout << "Silmek istediginiz Akademisyen sicil no giriniz:";
+		cin >> t_aca.academician_num;
+
+		for (k = 0; k < aca_counter; k++) {
+			if (aca[k].getAcademician_num() == t_aca.academician_num)
+				control = 1;
+		}
+
+		if (control == 0) {
+			cout << "Sistem de " << t_aca.academician_num << " numarasi bulunamadi! Tekrar deneyiz." << endl;
+			menu_1();
+		}
+		else {
+			ifstream acaFile;
+			acaFile.open("akademisyen.txt");
+
+			ofstream tempAca;
+			tempAca.open("tempAca.txt", ios::app);
+			for (i = 0; i < aca_counter; i++) {
+				if (t_aca.academician_num != aca[i].getAcademician_num()) {
+
+					tempAca << aca[i].getAcademician_num() << "\t";
+					tempAca << aca[i].getName() << "\t";
+					tempAca << aca[i].getL_name() << "\t\t";
+					tempAca << aca[i].getMajor() << "\t\t";
+					tempAca << aca[i].getMail() << "\t";
+					tempAca << aca[i].getPhone_num() << "\t";
+					tempAca << aca[i].getDegree() << "\n";
+				}
+			}
+			tempAca.close();
+
+			acaFile.close();
+			remove("akademisyen.txt");
+			rename("tempAca.txt", "akademisyen.txt");
+
+			otherProcess();
+		}
+	}
+	if (selection1 == 3) { //Ogrenci sil
+		TempApp t_app;
+
+		cout << "Randevuyu silmek icin ogrenci numaranizi giriniz:";
+		cin >> t_app.ogr_n;
+
+		for (k = 0; k < app_counter; k++) {
+			if (app[k].getStuNumInApp() == t_app.ogr_n)
+				control = 1;
+		}
+
+		if (control == 0) {
+			cout << "Sistem de " << t_app.ogr_n << " numarasi bulunamadi! Tekrar deneyiz." << endl;
+			menu_1();
+		}
+		else {
+			ifstream appFile;
+			appFile.open("randevu.txt");
+
+			ofstream tempApp;
+			tempApp.open("tempApp.txt", ios::app);
+			for (i = 0; i < app_counter; i++) {
+				if (t_app.ogr_n != app[i].getStuNumInApp()) {
+
+					tempApp << app[i].getStuNumInApp() << "\t";
+					tempApp << app[i].getAcaNumInApp() << "\t";
+					tempApp << app[i].getDate() << "\t\t";
+					tempApp << app[i].getStart_time() << "\t\t";
+					tempApp << app[i].getFinish_time() << "\n";
+				}
+			}
+			tempApp.close();
+
+			appFile.close();
+			remove("randevu.txt");
+			rename("tempApp.txt", "randevu.txt");
+
+			otherProcess();
+		}
+	}
+}

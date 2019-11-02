@@ -1,0 +1,211 @@
+#include <iostream>
+#include <stdlib.h>
+#include <time.h>
+#include <fstream>
+
+#define boxCount 5
+#define maxSize	 3
+#define dens     1
+
+using namespace std;
+
+static int counter      = 0;
+static int coorCounter  = 0;
+static int comXYCounter = 0;
+static double spaceCOMx = 0;
+static double spaceCOMy = 0;
+bool spaceControll		= true;
+
+class Coord {
+private:
+	double x;
+	double y;
+public:
+	Coord();
+	int getX();
+	int getY();
+};
+
+class Box {
+private:
+	double width;
+	double height;
+	double density;
+	double mass;
+	double comX;
+	double comY;
+	Coord c;
+public:
+	Box();
+	void setBoxesCoor(double, double, int, int);
+	void massCounting(double, double, double);
+	void comXY(double, double, double, double);
+	void COM(double, double);
+	int  setVolumes(double, double, double, int, int);
+	int	 getWidth();
+	int	 getHeight();
+	int  getDensity();
+}boxes[20];
+
+class Space {
+private:
+	int spaceX;
+	int spaceY;
+	Box b;
+	Coord c;
+public:
+	Space(int, int);
+	void fillRandomBoxes(int, int, double);
+	void printBoxCoordinates();
+};
+/////------------------MAIN----------------------\\\\\\\
+
+int main() {
+	Space s(20, 30);
+
+	s.fillRandomBoxes(boxCount, maxSize, dens);
+	s.printBoxCoordinates();
+	system("pause");
+	return 0;
+}
+/////--------------Space METHODS------------------\\\\\\\
+
+Space::Space(int spaceX, int spaceY) {
+	this->spaceX = spaceX;
+	this->spaceY = spaceY;
+}
+
+void Space::fillRandomBoxes(int bC, int m, double d) {//boxCount, maxSize, density
+	int w, h;
+
+	srand(time(NULL));
+
+	while (bC > 0) {
+		w = 1 + rand() % m;
+		h = 1 + rand() % m;
+		b.setVolumes(w, h, d, spaceX, spaceY);
+		if (!spaceControll) {
+			bC = 0;
+		}
+		bC--;
+	}
+}
+
+void Space::printBoxCoordinates() {
+
+	ofstream doc;
+	doc.open("Boxes.txt");
+
+	while (counter > coorCounter) {
+		if (coorCounter == 0) {
+			cout << "Baslangic = (" << c.getX() << "," << c.getY() << ")		";
+			doc  << "Baslangic = (" << c.getX() << "," << c.getY() << ")		";
+		}
+		else {
+			cout << "Baslangic = (" << boxes[coorCounter - 1].getWidth() << "," << boxes[coorCounter - 1].getHeight() << ")		";
+			doc  << "Baslangic = (" << boxes[coorCounter - 1].getWidth() << "," << boxes[coorCounter - 1].getHeight() << ")		";
+		}
+		cout << "Bitis = (" << boxes[coorCounter].getWidth() << "," << boxes[coorCounter].getHeight() << ")" << endl;
+		doc  << "Bitis = (" << boxes[coorCounter].getWidth() << "," << boxes[coorCounter].getHeight() << ")" << endl;
+		coorCounter++;
+	}
+	cout << "Uzayin Agirlik Merkezi = (" << spaceCOMx << " , " << spaceCOMy << ")"<<endl;
+	doc  << "Uzayin Agirlik Merkezi = (" << spaceCOMx << " , " << spaceCOMy << ")"<<endl;
+
+	doc.close();
+}
+/////--------------Box METHODS------------------\\\\\\\
+
+Box::Box() {
+	mass = 0;
+}
+
+int Box::setVolumes(double w, double h, double d, int sX, int sY) {
+	boxes[counter].width   = w;
+	boxes[counter].height  = h;
+	boxes[counter].density = d;
+
+	 if (boxes[counter - 1].width < sX-2 && boxes[counter-1].height < sY-2) {
+
+		cout << "(Width*Height,Density):"  << boxes[counter].getWidth()          << "*"
+			 << boxes[counter].getHeight() << "," << boxes[counter].getDensity() << endl;
+
+		massCounting(boxes[counter].width, boxes[counter].height, boxes[counter].density);
+		setBoxesCoor(boxes[counter].width, boxes[counter].height, sX, sY);
+	}
+	 else{
+		 spaceControll = !spaceControll;
+
+		 spaceCOMx /= mass;
+		 spaceCOMy /= mass;
+
+		 return 0;
+	 }
+}
+
+void Box::massCounting(double w, double h, double d) {
+	boxes[counter].mass = w * h * d;
+	mass += boxes[counter].mass;
+}
+
+void Box::setBoxesCoor(double w, double h, int sX, int sY) {
+	Coord c;
+
+	if (counter == 0) {
+		boxes[counter].width  = c.getX() + w;
+		boxes[counter].height = c.getY() + h;
+
+		comXY(boxes[counter].width, boxes[counter].height, c.getX(), c.getY());
+		counter++;
+	}
+	else {
+		boxes[counter].width  = boxes[counter - 1].width  + w;
+		boxes[counter].height = boxes[counter - 1].height + h;
+
+		comXY(boxes[counter].width, boxes[counter].height, boxes[counter - 1].width, boxes[counter - 1].height);
+		counter++;
+	}
+}
+
+void Box::comXY(double xB, double yB, double xF, double yF) {
+	boxes[comXYCounter].comX = (xB + xF) / 2; // COM for x.
+	boxes[comXYCounter].comY = (yB + yF) / 2; // COM for y.
+
+	COM(boxes[comXYCounter].comX, boxes[comXYCounter].comY);
+}
+
+void Box::COM(double comX, double comY) {
+	spaceCOMx += (boxes[comXYCounter].comX) * (boxes[comXYCounter].mass);
+	spaceCOMy += (boxes[comXYCounter].comY) * (boxes[comXYCounter].mass);
+
+	if (comXYCounter+1 == boxCount ) {
+		spaceCOMx /= mass;
+		spaceCOMy /= mass;
+	}
+	comXYCounter++;
+}
+
+int Box::getWidth() {
+	return width;
+}
+int Box::getHeight() {
+	return height;
+}
+int Box::getDensity() {
+	return density;
+}
+
+/////--------------Coord METHODS------------------\\\\\\\
+
+Coord::Coord() {
+	x = 0;
+	y = 0;
+}
+
+int Coord::getX() {
+	return x;
+}
+
+int Coord::getY() {
+	return y;
+}
